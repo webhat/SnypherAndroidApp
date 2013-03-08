@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Snypher</string>
+    <string name="exception_message">It broke</string>
+    <string name="WebServiceURL">http://www.rphh.org/</string>
+    <string name="username">Username here</string>
+    <string name="password">Password here</string>
+    <string name="login">Login</string>
+    <string name="login_exception">Please enter you login credentials</string>
+</resources>

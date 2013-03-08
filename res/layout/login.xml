@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="fill_parent"
+             android:layout_height="wrap_content">
+    <TableRow android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <ImageView android:layout_height="wrap_content"
+                   android:layout_width="wrap_content"
+                   android:layout_marginLeft="100dip"
+                   android:layout_marginRight="10dip"
+                   android:layout_marginBottom="50dip"
+                   android:layout_marginTop="50dip"
+                   android:src="@drawable/snypher" android:id="@+id/Logo"/>
+    </TableRow>
+
+    <TableRow android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="wrap_content">
+        <EditText android:layout_height="wrap_content"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:id="@+id/username"
+                  android:hint="@string/username"/>
+    </TableRow>
+    <TableRow android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="fill_parent">
+        <EditText android:layout_height="fill_parent"
+                  android:layout_width="0dp"
+                  android:layout_weight="1"
+                  android:id="@+id/password"
+                  android:hint="@string/password"/>
+    </TableRow>
+
+    <TableRow android:layout_width="0dp"
+              android:layout_weight="1"
+              android:layout_height="fill_parent">
+        <Button android:layout_height="fill_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:id="@+id/login"
+                android:hint="@string/login"/>
+    </TableRow>
+</TableLayout>
