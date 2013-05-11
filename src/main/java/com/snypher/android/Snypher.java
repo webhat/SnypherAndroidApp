@@ -2,6 +2,7 @@ package com.snypher.android;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -9,9 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Environment;
+import android.os.*;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.*;
@@ -55,6 +54,7 @@ public class Snypher extends Activity {
 
     private boolean inPreview = false;
     private boolean cameraConfigured = true;
+    private UIHandler uiHandler = null;
 
     /**
      * Called when the activity is first created.
@@ -222,6 +222,7 @@ public class Snypher extends Activity {
     }
 
     class ImageUploadTask extends AsyncTask<Void, Void, String> {
+
         @Override
         protected String doInBackground(Void... unsued) {
             SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -263,14 +264,14 @@ public class Snypher extends Activity {
                 if (dialog.isShowing())
                     dialog.dismiss();
                 Log.e(e.getClass().getName(), e.getMessage(), e);
-                Toast.makeText(getApplicationContext(),
-                        getString(R.string.exception_message),
-                        Toast.LENGTH_LONG).show();
+                toastIt(getString(R.string.exception_message));
+
                 return null;
             }
 
             // (null);
         }
+
 
         @Override
         protected void onProgressUpdate(Void... unsued) {
@@ -284,6 +285,7 @@ public class Snypher extends Activity {
                     dialog.dismiss();
 
                 if (sResponse != null) {
+                    System.err.println(sResponse);
                     JSONObject JResponse = new JSONObject(sResponse);
                     int success = JResponse.getInt("SUCCESS");
                     String message = JResponse.getString("MESSAGE");
@@ -407,4 +409,40 @@ public class Snypher extends Activity {
             System.out.println("surfaceDestroyed");
         }
     };
+
+
+    private final class UIHandler extends Handler {
+        public static final int DISPLAY_UI_TOAST = 0;
+        public static final int DISPLAY_UI_DIALOG = 1;
+
+        public UIHandler(Looper looper) {
+            super(looper);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case UIHandler.DISPLAY_UI_TOAST: {
+                    Context context = getApplicationContext();
+                    Toast t = Toast.makeText(context, (String) msg.obj, Toast.LENGTH_LONG);
+                    t.show();
+                }
+                case UIHandler.DISPLAY_UI_DIALOG:
+                    //TBD
+                default:
+                    break;
+            }
+        }
+    }
+
+    public void toastIt(String message) {
+        if (uiHandler == null) {
+            HandlerThread uiThread = new HandlerThread("UIHandler");
+            uiThread.start();
+            uiHandler = new UIHandler(uiThread.getLooper());
+        }
+        Message msg = uiHandler.obtainMessage(UIHandler.DISPLAY_UI_TOAST);
+        msg.obj = message;
+        uiHandler.sendMessage(msg);
+    }
 }
