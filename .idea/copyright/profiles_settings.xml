@@ -1,5 +1,7 @@
 <component name="CopyrightManager">
-  <settings default="">
-    <module2copyright />
+  <settings default="Snypher">
+    <module2copyright>
+      <element module="Project Files" copyright="Snypher" />
+    </module2copyright>
   </settings>
 </component>

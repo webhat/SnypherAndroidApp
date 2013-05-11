@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2013 Daniël W. Crompton info+snypher@specialbrands.net, Snypher
+  ~
+  ~                 This program is distributed in the hope that it will be useful,
+  ~                 but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~                 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.snypher.android"
-          android:versionCode="1"
-          android:versionName="1.0">
+          android:versionCode="2"
+          android:versionName="1.1">
 
     <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="16"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" />
-    <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera"/>
+    <uses-feature android:name="android.hardware.camera.autofocus"/>
 
     <application android:icon="@drawable/snypher" android:label="@string/app_name" android:debuggable="true">
         <activity android:name=".Snypher"
