@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2013 Daniël W. Crompton info+snypher@specialbrands.net, Snypher
+ *
+ *                 This program is distributed in the hope that it will be useful,
+ *                 but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *                 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
 package com.snypher.android;
 
 import android.app.Activity;
@@ -9,9 +17,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.*;
@@ -19,42 +28,55 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.ByteArrayBody;
-import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.json.JSONObject;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+
 
 /**
- * Created with IntelliJ IDEA.
- * User: danielcrompton
- * Date: 7/11/12
- * Time: 4:10 PM
+ * @author webhat
+ * @version 1.1
  */
 public class Snypher extends Activity {
     private static final int PICK_IMAGE = 1;
     private static final int TAKE_IMAGE = 2;
     private ImageView imgView;
     private Button upload;
+
+    public EditText getCaption() {
+        return caption;
+    }
+
+    public void setCaption(EditText caption) {
+        this.caption = caption;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public ProgressDialog getDialog() {
+        return dialog;
+    }
+
+    public void setDialog(ProgressDialog dialog) {
+        this.dialog = dialog;
+    }
+
     private EditText caption;
     private Bitmap bitmap;
     private ProgressDialog dialog;
-    private static final String PREFS_NAME = "SnypherPrefs";
+    public static final String PREFS_NAME = "SnypherPrefs";
 
-    private SurfaceView preview = null;
     private SurfaceHolder previewHolder = null;
     private Camera camera;
 
-    private boolean inPreview = false;
     private boolean cameraConfigured = true;
+    private UIHandler uiHandler = null;
 
     /**
      * Called when the activity is first created.
@@ -68,7 +90,7 @@ public class Snypher extends Activity {
 
     }
 
-    private void createMemory() {
+    protected void createMemory() {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         String username = settings.getString("username", "");
         String password = settings.getString("password", "");
@@ -103,7 +125,7 @@ public class Snypher extends Activity {
         }
     }
 
-    private void resetPassword() {
+    protected void resetPassword() {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString("username", "");
@@ -115,17 +137,17 @@ public class Snypher extends Activity {
         setContentView(R.layout.imageupload);
         imgView = (ImageView) findViewById(R.id.ImageView);
         upload = (Button) findViewById(R.id.Upload);
-        caption = (EditText) findViewById(R.id.Caption);
+        setCaption((EditText) findViewById(R.id.Caption));
         upload.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
-                if (bitmap == null) {
+                if (getBitmap() == null) {
                     Toast.makeText(getApplicationContext(),
                             "Please select image", Toast.LENGTH_SHORT).show();
                 } else {
-                    dialog = ProgressDialog.show(Snypher.this, "Uploading",
-                            "Please wait...", true);
-                    new ImageUploadTask().execute();
+                    setDialog(ProgressDialog.show(Snypher.this, "Uploading",
+                            "Please wait...", true));
+                    new ImageUploadTask(Snypher.this).execute();
                 }
             }
         });
@@ -190,7 +212,10 @@ public class Snypher extends Activity {
 
                     try {
                         // OI FILE Manager
-                        String filemanagerstring = outputFileUri.getPath();
+                        String filemanagerstring = null;
+                        if (outputFileUri != null) {
+                            filemanagerstring = outputFileUri.getPath();
+                        }
 
                         // MEDIA GALLERY
                         String selectedImagePath = getPath(outputFileUri);
@@ -208,7 +233,7 @@ public class Snypher extends Activity {
                         if (filePath != null) {
                             decodeFile(filePath);
                         } else {
-                            bitmap = null;
+                            setBitmap(null);
                         }
                     } catch (Exception e) {
                         Toast.makeText(getApplicationContext(), "Internal error",
@@ -218,104 +243,6 @@ public class Snypher extends Activity {
                 }
                 break;
             default:
-        }
-    }
-
-    class ImageUploadTask extends AsyncTask<Void, Void, String> {
-        @Override
-        protected String doInBackground(Void... unsued) {
-            SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-            String username = settings.getString("username", "");
-            String password = settings.getString("password", "");
-
-            try {
-                HttpClient httpClient = new DefaultHttpClient();
-                HttpContext localContext = new BasicHttpContext();
-                HttpPost httpPost = new HttpPost(
-                        getString(R.string.WebServiceURL)
-                                + "snypher/test.php?method=uploadPhoto");
-
-                MultipartEntity entity = new MultipartEntity(
-                        HttpMultipartMode.BROWSER_COMPATIBLE);
-
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-                byte[] data = bos.toByteArray();
-                //entity.addPart("photoId", new StringBody(getIntent()
-                //        .getStringExtra("photoId")));
-                entity.addPart("username", new StringBody(username));
-                entity.addPart("password", new StringBody(password));
-                entity.addPart("returnformat", new StringBody("json"));
-                entity.addPart("uploaded", new ByteArrayBody(data,
-                        "mySnyph.jpg"));
-                entity.addPart("photoCaption", new StringBody(caption.getText()
-                        .toString()));
-                httpPost.setEntity(entity);
-                HttpResponse response = httpClient.execute(httpPost,
-                        localContext);
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(
-                                response.getEntity().getContent(), "UTF-8"));
-
-                String sResponse = reader.readLine();
-                return sResponse;
-            } catch (Exception e) {
-                if (dialog.isShowing())
-                    dialog.dismiss();
-                Log.e(e.getClass().getName(), e.getMessage(), e);
-                Toast.makeText(getApplicationContext(),
-                        getString(R.string.exception_message),
-                        Toast.LENGTH_LONG).show();
-                return null;
-            }
-
-            // (null);
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... unsued) {
-
-        }
-
-        @Override
-        protected void onPostExecute(String sResponse) {
-            try {
-                if (dialog.isShowing())
-                    dialog.dismiss();
-
-                if (sResponse != null) {
-                    JSONObject JResponse = new JSONObject(sResponse);
-                    int success = JResponse.getInt("SUCCESS");
-                    String message = JResponse.getString("MESSAGE");
-                    switch (success) {
-                        case 1:
-                            Toast.makeText(getApplicationContext(),
-                                    "Photo uploaded successfully",
-                                    Toast.LENGTH_SHORT).show();
-                            caption.setText("");
-                            break;
-                        case 403:
-                            resetPassword();
-                            createMemory();
-                            break;
-                        case 0:
-                        default:
-                            Toast.makeText(getApplicationContext(), message,
-                                    Toast.LENGTH_LONG).show();
-                            break;
-                    }
-                    if (success == 0) {
-
-                    } else {
-
-                    }
-                }
-            } catch (Exception e) {
-                Log.e(e.getClass().getName(), e.getMessage(), e);
-                Toast.makeText(getApplicationContext(),
-                        getString(R.string.exception_message),
-                        Toast.LENGTH_LONG).show();
-            }
         }
     }
 
@@ -357,14 +284,14 @@ public class Snypher extends Activity {
         // Decode with inSampleSize
         BitmapFactory.Options o2 = new BitmapFactory.Options();
         o2.inSampleSize = scale;
-        bitmap = BitmapFactory.decodeFile(filePath, o2);
+        setBitmap(BitmapFactory.decodeFile(filePath, o2));
 
-        imgView.setImageBitmap(bitmap);
+        imgView.setImageBitmap(getBitmap());
 
     }
 
 
-    private void initPreview(int width, int height) {
+    private void initPreview() {
         if (camera != null && previewHolder.getSurface() != null) {
             try {
                 camera.setPreviewDisplay(previewHolder);
@@ -382,10 +309,9 @@ public class Snypher extends Activity {
             try {
                 camera.setPreviewDisplay(previewHolder);
             } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
             camera.startPreview();
-            inPreview = true;
         }
     }
 
@@ -398,7 +324,7 @@ public class Snypher extends Activity {
         public void surfaceChanged(SurfaceHolder holder, int format,
                                    int width, int height) {
             System.out.println("surfaceChanged");
-            initPreview(width, height);
+            initPreview();
             startPreview();
         }
 
@@ -407,4 +333,16 @@ public class Snypher extends Activity {
             System.out.println("surfaceDestroyed");
         }
     };
+
+
+    public void toastIt(String message) {
+        if (uiHandler == null) {
+            HandlerThread uiThread = new HandlerThread("UIHandler");
+            uiThread.start();
+            uiHandler = new UIHandler(this, uiThread.getLooper());
+        }
+        Message msg = uiHandler.obtainMessage(UIHandler.DISPLAY_UI_TOAST);
+        msg.obj = message;
+        uiHandler.sendMessage(msg);
+    }
 }

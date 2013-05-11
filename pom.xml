@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2013 Daniël W. Crompton info+snypher@specialbrands.net, Snypher
+  ~
+  ~                 This program is distributed in the hope that it will be useful,
+  ~                 but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~                 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -48,10 +56,44 @@
                 <artifactId>android-maven-plugin</artifactId>
                 <configuration>
                     <sdk>
-                        <platform>4</platform>
+                        <platform>16</platform>
                     </sdk>
+                    <sign>
+                        <debug>false</debug>
+                    </sign>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <developers>
+        <developer>
+            <email>daniel.crompton+snypher@specialbrands.net</email>
+            <name>Dani&#235;l W. Crompton</name>
+            <url>https://github.com/webhat</url>
+            <id>webhat</id>
+            <organization>Special Brands</organization>
+            <organizationUrl>http://specialbrands.net/</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>CET</timezone>
+        </developer>
+    </developers>
+    <scm>
+        <url></url>
+        <developerConnection></developerConnection>
+        <connection></connection>
+    </scm>
+    <licenses>
+        <license>
+            <name>Snypher</name>
+            <comments>
+                Copyright (c) 2012 Daniël W. Crompton info+snypher@specialbrands.net, Snypher
+
+                This program is distributed in the hope that it will be useful,
+                but WITHOUT ANY WARRANTY; without even the implied warranty of
+                MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+            </comments>
+        </license>
+    </licenses>
 </project>
